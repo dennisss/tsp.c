@@ -33,9 +33,11 @@ typedef struct {
 
 // Initialize a new zeroed path
 void tspp_init(tsp_path *p, tsp_graph *g);
+void tspp_destroy(tsp_path *p);
+void tspp_clear(tsp_path *p);
 void tspp_push(tsp_path *p, int index);
 void tspp_pop(tsp_path *p);
-
+void tspp_copy(tsp_path *p, tsp_path *dst);
 
 // Read a file into an existing problem object
 void tsp_read(tsp_problem *prob, char *filename);

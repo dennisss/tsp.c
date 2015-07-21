@@ -4,6 +4,14 @@
 #include "tsp.h"
 
 
+typedef struct {
+	tsp_graph *graph;
+	tsp_graph *trail;
+
+	tsp_path *ants;
+
+} tsp_aco_state;
+
 
 // Initialize a ACO search
 void tsp_aco_init(tsp_aco_state *state, tsp_graph *g);
@@ -13,36 +21,11 @@ void tsp_aco_destroy(tsp_aco_state *state);
 void tsp_aco_iterate(tsp_aco_state *state, tsp_path *best);
 
 
+// Have the ant move up one node, returns true if successful
+int tsp_aco_step(tsp_aco_state *state, tsp_path *ant);
 
 
-
-typedef struct {
-	tsp_graph *graph;
-	tsp_graph *trail;
-
-	tsp_ant *ants;
-
-} tsp_aco_state;
-
-
-
-typedef struct {
-	tsp_path path;
-	char *visited;
-} tsp_ant;
-
-
-void tsp_ant_init(tsp_ant *a, tsp_graph *g);
-void tsp_ant_destroy(tsp_ant *a);
-
-// Clear an ant back to its initial state
-void tsp_ant_clear(tsp_ant *a);
-
-
-// Have the ant move up one node
-void tsp_ant_step(tsp_ant *a, tsp_aco_state *state);
-
-
-
+void tsp_aco_update(tsp_aco_state *state, tsp_path *ant);
+void tsp_aco_decay(tsp_aco_state *state);
 
 #endif

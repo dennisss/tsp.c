@@ -15,6 +15,7 @@ $(tsp_TARGET): objdir $(tsp_OBJS)
 
 objdir:
 	mkdir -p obj
+	mkdir -p obj/generate
 
 obj/%.o: src/%.c
 	$(CC) $(CFLAGS) -o $@ -c $<

@@ -33,7 +33,7 @@ void tspg_init(tsp_graph *graph, int size){
 
 }
 
-void tspg_free(tsp_graph *graph){
+void tspg_destroy(tsp_graph *graph){
 	free(graph->levels);
 	free(graph->edges);
 };

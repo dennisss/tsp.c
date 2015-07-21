@@ -25,7 +25,7 @@
 #if TSP_GRAPH_IMPL == TSP_GRAPH_DENSE
 
 // Dense graph implication
-// Stores only half of the square as the other half is redundant
+// Stores only half of the square as the other half is redundant (for an undirected graph)
 typedef struct {
 	int size;
 	float *edges; // Big buffer of edge weights
@@ -52,7 +52,7 @@ typedef struct {
 // Initialize an empty graph with space for the given number of nodes
 void tspg_init(tsp_graph *graph, int size);
 
-void tspg_free(tsp_graph *graph);
+void tspg_destroy(tsp_graph *graph);
 
 float *tspg_edge(tsp_graph *graph, int i, int j);
 
