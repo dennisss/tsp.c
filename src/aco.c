@@ -1,4 +1,4 @@
-
+#include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 
@@ -9,9 +9,9 @@
 #define NANTS 100
 
 // Ant system parameters
-#define ALPHA 0.5
-#define BETA 0.5
-#define RHO 0.4
+#define ALPHA 1
+#define BETA 4
+#define RHO 0.5
 
 
 // Ant System
@@ -31,9 +31,10 @@ void tsp_aco_init(tsp_aco_state *state, tsp_graph *g){
 
 	// Initialize all pheromones to 0
 	// TODO: Have this copy the edges of the original graph
+	// TODO: Initializa pheromene with 1 / (cost of random tour)
 	for(int i = 0; i < g->size; i++){
 		for(int j = i; j < g->size; j++){
-			*tspg_edge(state->trail, i, j) = 0.0;
+			*tspg_edge(state->trail, i, j) = 1.0 /  162097.296875; //11340.0;
 		}
 	}
 
@@ -72,9 +73,11 @@ void tsp_aco_iterate(tsp_aco_state *state, tsp_path *best){
 	for(int i = 0; i < NANTS; i++){
 		tsp_path *a = &state->ants[i];
 
+
 		// Try to generate solutions
 		while(tsp_aco_step(state, a))
 			;
+
 	}
 
 
@@ -105,14 +108,13 @@ void tsp_aco_iterate(tsp_aco_state *state, tsp_path *best){
 
 int tsp_aco_step(tsp_aco_state *state, tsp_path *ant){
 
-	printf("step\n");
-
 	// Generate probabilities for each out edge
 
 	int n = state->graph->size;
 	int i = ant->indices[ant->length - 1], j;
 
-	float *probs = (float *) malloc(sizeof(float) * n);
+	float probs[n];
+	//float *probs = (float *) malloc(sizeof(float) * n);
 
 	float sum = 0.0;
 	int found = 0;
@@ -122,8 +124,14 @@ int tsp_aco_step(tsp_aco_state *state, tsp_path *ant){
 		// TODO: Automatically accept edges with zero length
 
 		if(w != NO_EDGE && !ant->visited[j]){
+
+			if(w < 1e-6){
+				tspp_push(ant, j);
+				//free(probs);
+				return 1;
+			}
+
 			float part = pow(*tspg_edge(state->trail, i, j), ALPHA) / pow(w, BETA);
-			printf("%f ", part);
 			probs[j] = part;
 			sum += part;
 			found = 1;
@@ -135,11 +143,13 @@ int tsp_aco_step(tsp_aco_state *state, tsp_path *ant){
 	if(!found){ // No edge can be pushed
 
 		// Try to revisit the first city
+		tspp_push(ant, ant->indices[0]);
+
 
 		// Otherwise
 
 
-		free(probs);
+		//free(probs);
 		return 0;
 	}
 
@@ -149,19 +159,19 @@ int tsp_aco_step(tsp_aco_state *state, tsp_path *ant){
 	// Pick a random edge
 	float r = sum * static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
 	float rolling = 0.0;
-	printf("%f %f\n", r, sum);
+	//printf("%f %f\n", r, sum);
 
 	for(j = 0; j < n; j++){
 		rolling += probs[j];
 		if(r <= rolling){ // TODO: Make sure that this skips nodes with no edges
-			printf("push\n");
+			//printf("push\n");
 
 			tspp_push(ant, j);
 			break;
 		}
 	}
 
-	free(probs);
+	//free(probs);
 	return 1;
 }
 
@@ -171,7 +181,7 @@ void tsp_aco_update(tsp_aco_state *state, tsp_path *ant){
 	float dt = Q / ant->weight;
 
 	for(int i = 0; i < ant->length - 1; i++)
-		*tspg_edge(state->trail, i, i+1) += dt;
+		*tspg_edge(state->trail, ant->indices[i], ant->indices[i+1]) += dt;
 }
 
 

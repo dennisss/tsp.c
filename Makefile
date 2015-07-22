@@ -2,7 +2,7 @@
 BUILD_PATH = .
 OBJ_PATH = obj
 CC = g++
-CFLAGS = -w -fpermissive -std=c++0x -O3 #-lGL -lGLEW #-Iext -DVERSION=$(VERSION) # -pthread
+CFLAGS = -w -fpermissive -std=c++0x -O3 -pthread -lGL -lGLEW -lglfw #-Iext -DVERSION=$(VERSION)
 
 
 tsp_TARGET = tsp

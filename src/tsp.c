@@ -4,6 +4,7 @@
 
 #include "tsp.h"
 #include "aco.h"
+#include "viewer.h"
 
 
 int main(int argc, char *argv[]){
@@ -28,6 +29,12 @@ int main(int argc, char *argv[]){
 	// TODO: Remove cities with the same location
 
 
+
+	tsp_viewer viewer;
+	tspv_init(&viewer, &prob);
+
+
+
 	// Generate graph
 	tsp_graph graph;
 	tsp_generate_complete(&graph, &prob);
@@ -43,14 +50,22 @@ int main(int argc, char *argv[]){
 	tsp_aco_state state;
 	tsp_aco_init(&state, &graph);
 
+	printf("Starting...\n");
 
 	for(int i = 0; i < 10; i++){
 		tsp_aco_iterate(&state, &path);
+		tspv_update(&viewer, &path);
+		printf("#%d: %f\n", i+1, path.weight);
 	}
 
 	tsp_aco_destroy(&state);
 
 
+	printf("Done!\n");
+
+
+	tspv_wait(&viewer);
+	tspv_destroy(&viewer);
 
 
 

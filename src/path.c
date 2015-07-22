@@ -6,7 +6,7 @@
 
 void tspp_init(tsp_path *p, tsp_graph *g){
 	p->graph = g;
-	p->indices = (int *) malloc(sizeof(int) * g->size);
+	p->indices = (int *) malloc(sizeof(int) * (g->size+1));
 	p->visited = (char *) malloc(sizeof(char) * g->size);
 	tspp_clear(p);
 }
@@ -24,6 +24,11 @@ void tspp_clear(tsp_path *p){
 }
 
 void tspp_push(tsp_path *p, int index){
+
+	if(p->length == p->graph->size + 1){
+		printf("Warning: Path too long\n");
+	}
+
 	p->indices[p->length++] = index;
 	p->visited[index]++;
 
