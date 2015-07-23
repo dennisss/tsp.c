@@ -14,7 +14,7 @@ typedef struct {
 
 
 // Initialize a ACO search
-void tsp_aco_init(tsp_aco_state *state, tsp_graph *g);
+void tsp_aco_init(tsp_aco_state *state, tsp_graph *g, tsp_path *best);
 void tsp_aco_destroy(tsp_aco_state *state);
 
 // Iterate the search process and try to improve the best known path

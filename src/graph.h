@@ -4,8 +4,8 @@
 #define TSP_GRAPH_DENSE 1
 #define TSP_GRAPH_SPARSE 2
 
-// Pick which graph implementation to use
-#define TSP_GRAPH_IMPL TSP_GRAPH_DENSE
+// Pick which graph implementation to use (this is handled by the Makefile)
+//#define TSP_GRAPH_IMPL TSP_GRAPH_DENSE
 
 
 
@@ -48,11 +48,28 @@ typedef struct {
 #endif
 
 
+// Graph iterator
+typedef struct {
+	int i;
+	int j;
+
+} tsp_iter;
+
+
 
 // Initialize an empty graph with space for the given number of nodes
 void tspg_init(tsp_graph *graph, int size);
 
 void tspg_destroy(tsp_graph *graph);
+
+
+// Creates an iterator for looping through the edges going through a single node
+void tspg_iter(tsp_graph *graph, int i);
+
+//void tspg_next(tsp_iter *)
+
+
+
 
 float *tspg_edge(tsp_graph *graph, int i, int j);
 

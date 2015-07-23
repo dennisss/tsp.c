@@ -15,4 +15,11 @@ const char *get_filename_ext(const char *filename);
 // Tokenizes a string by spaces; like strtok initally pass in the start string and then pass NULL
 char *spacetok(char *str);
 
+// Inplace whitespace stripping
+char *strip(char *str);
+
+// Inplace splitting of a string in a ':' delimited key-value pair; this performs stripping as well
+void keyvalue_split(char *str, char **key, char **value);
+
+
 #endif

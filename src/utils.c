@@ -39,14 +39,6 @@ bool parse_double(char *str, double *val){
 
 */
 
-// http://stackoverflow.com/questions/5309471/getting-file-extension-in-c
-const char *get_filename_ext(const char *filename) {
-    const char *dot = strrchr(filename, '.');
-    if(!dot || dot == filename) return "";
-    return dot + 1;
-}
-
-
 
 static char *laststr = NULL;
 char *spacetok(char *str){
@@ -87,3 +79,44 @@ char *spacetok(char *str){
 
 	return tok;
 }
+
+
+void keyvalue_split(char *str, char **key, char **value){
+
+	// Find the delimeter
+	char *v = str;
+	for(; *v != '\0'; v++){
+		// Split the string on the delimeter
+		if(*v == ':'){
+			*v = '\0';
+			v++;
+			break;
+		}
+	}
+
+	*key = strip(str);
+	*value = strip(v);
+}
+
+
+char *strip(char *str){
+	// Strip leading whitespace
+	while(isspace(*str))
+		str++;
+
+	// Check for empty string
+	if(*str == '\0')
+		return str;
+
+	// Strip trailing whitespace
+	char *last = str + strlen(str) - 1;
+	for(; isspace(*last); last--){
+		*last = '\0';
+	}
+
+	return str;
+}
+
+
+
+

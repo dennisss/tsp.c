@@ -1,16 +1,27 @@
 #ifndef TSP_H_
 #define TSP_H_
 
+#ifdef DEBUG
+	#include <stdio.h>
+	#define LOG(...) printf(__VA_ARGS__)
+#else
+	#define LOG(...)
+#endif
+
+
 
 #include "graph.h"
 
 // Represents a city in the TSP problem
-typedef struct { // Node: node ids start at 1, not 0
-	int id;
+typedef struct tsp_node tsp_node;
+struct tsp_node {
+	char *id;
 
 	float x;
 	float y;
-} tsp_node;
+
+	tsp_node *next; // In the case of duplicates, there may be many cities associated with one
+};
 
 // Description of the TSP problem
 typedef struct {
@@ -41,7 +52,7 @@ void tspp_copy(tsp_path *p, tsp_path *dst);
 
 // Read a file into an existing problem object
 void tsp_read(tsp_problem *prob, char *filename);
-
+void tsp_merge(tsp_problem *prob);
 
 
 /*

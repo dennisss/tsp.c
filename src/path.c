@@ -26,7 +26,7 @@ void tspp_clear(tsp_path *p){
 void tspp_push(tsp_path *p, int index){
 
 	if(p->length == p->graph->size + 1){
-		printf("Warning: Path too long\n");
+		LOG("Warning: Path too long\n");
 	}
 
 	p->indices[p->length++] = index;

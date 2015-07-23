@@ -1,3 +1,5 @@
+#ifdef BUILD_VIEWER
+
 #define GLEW_STATIC
 #include <GL/glew.h>
 
@@ -12,11 +14,17 @@
 #include <float.h>
 #include <math.h>
 
+
+/*
+
+	TODO: Why is everything displayed sideways?
+*/
+
 #define PERCENT_PAD 0.05
 
 void *_tspv_uithread(void *arg);
 
-void tspv_init(tsp_viewer *viewer, tsp_problem *prob){ //, tsp_path *path){
+void tspv_init(tsp_viewer *viewer, tsp_problem *prob){
 	if(prob->size == 0){
 		printf("Problem must have at least one node to visualize\n");
 		return;
@@ -71,8 +79,6 @@ void tspv_destroy(tsp_viewer *viewer){
 void tspv_update(tsp_viewer *viewer, tsp_path *path){
 	pthread_mutex_lock(&viewer->lock);
 
-	printf("%d\n", path->length);
-
 	for(int i = 0; i < path->length; i++){
 		int a = path->indices[i];
 
@@ -109,7 +115,6 @@ void *_tspv_uithread(void *arg){
 	}
 	float xspan = xmax - xmin, yspan = ymax - ymin;
 
-
 	// Add padding
 	float xpad = PERCENT_PAD*xspan, ypad = PERCENT_PAD * yspan;
 	xmin -= xpad; xmax += xpad;
@@ -143,7 +148,7 @@ void *_tspv_uithread(void *arg){
 
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
-	GLFWwindow *window = glfwCreateWindow(wwidth, wheight, "TSP View", nullptr, nullptr);
+	GLFWwindow *window = glfwCreateWindow(wwidth, wheight, "TSP View", NULL, NULL);
 
 	glfwMakeContextCurrent(window);
 
@@ -192,7 +197,7 @@ void *_tspv_uithread(void *arg){
 
 
 	// Setup view matrix
-	float view[] = {
+	GLfloat view[] = {
 		2.0/xspan, 0, 0, -2.0*xmin/xspan - 1.0,
 		0, 2.0/yspan, 0, -2.0*ymin/yspan - 1.0,
 		0, 0, 1, 0,
@@ -200,6 +205,13 @@ void *_tspv_uithread(void *arg){
 	};
 	GLint uniView = glGetUniformLocation(shaderProgram, "viewport");
 	glUniformMatrix4fv(uniView, 1, GL_TRUE, view);
+
+
+	GLint uniColor = glGetUniformLocation(shaderProgram, "Color");
+	glUniform3f(uniColor, 0.0, 0.0, 0.0);
+
+
+
 
 
 
@@ -253,13 +265,17 @@ void *_tspv_uithread(void *arg){
 		glClear(GL_COLOR_BUFFER_BIT);
 
 
+		// Draw path
+		glBindBuffer(GL_ARRAY_BUFFER, vboPath);
+		glUniform3f(uniColor, 0.0, 0.0, 0.0);
+		glDrawArrays(GL_LINE_STRIP, 0, viewer->nPathVerts);
+
+
 		// Draw cities
+		glUniform3f(uniColor, 1.0, 0.0, 0.0);
 		glBindBuffer(GL_ARRAY_BUFFER, vboCities);
 		glDrawArrays(GL_POINTS, 0, viewer->nCityVerts);
 
-		// Draw path
-		glBindBuffer(GL_ARRAY_BUFFER, vboPath);
-		glDrawArrays(GL_LINE_STRIP, 0, viewer->nPathVerts);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
@@ -272,3 +288,6 @@ void *_tspv_uithread(void *arg){
 	return NULL;
 }
 
+
+
+#endif

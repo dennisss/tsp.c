@@ -1,24 +1,27 @@
+#ifdef BUILD_VIEWER
 
-const char *vertexSource = R"(
-	#version 150
+const char *vertexSource =
+	"#version 150\n"
 
-	in vec2 position;
+	"in vec2 position;"
 
-	uniform mat4 viewport;
+	"uniform mat4 viewport;"
 
-	void main(){
-		gl_Position = viewport * vec4(position, 0.0, 1.0);
-	}
-)";
+	"void main(){"
+	"	gl_Position = viewport * vec4(position, 0.0, 1.0);"
+	"}";
 
 
-const char *fragmentSource = R"(
-	#version 150
+const char *fragmentSource =
+	"#version 150\n"
 
-	out vec4 outColor;
+	"uniform vec3 Color;"
 
-	void main(){
-		outColor = vec4(0.0, 0.0, 0.0, 1.0);
-	}
-)";
+	"out vec4 outColor;"
 
+	"void main(){"
+	"	outColor = vec4(Color, 1.0);"
+	"}";
+
+
+#endif
