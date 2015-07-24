@@ -35,7 +35,7 @@ void catch_interrupt(int sig){
 
 // Arguments
 static int show_viewer = 0;
-
+static int show_flags = 0;
 
 
 
@@ -45,6 +45,7 @@ static void *compute(void *arg){
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
 	clock_t t;
+
 
 	for(int i = 1; ; i++){
 		tsp_aco_iterate(&state, &path);
@@ -58,6 +59,15 @@ static void *compute(void *arg){
 
 		LOG("%d %f %f\n", i, ((float)t)/CLOCKS_PER_SEC, path.weight);
 	}
+
+
+//	tsp_search_dfs(&graph, &path);
+//	#ifdef BUILD_VIEWER
+//	if(show_viewer)
+//		tspv_update(&viewer, &path);
+//	#endif
+
+
 }
 
 
@@ -73,7 +83,7 @@ int main(int argc, char *argv[]){
 
 
 	if(argc < 3){
-		printf("Usage: ./tsp data.tsp seconds [-view] [-method (aco|aco+del|dfs+del)] [-init best.tour] \n");
+		printf("Usage: ./tsp data.tsp seconds [-view[+edges]]\n");// [-method (aco|aco+del|dfs+del)] [-init best.tour] \n");
 		return 1;
 	}
 
@@ -84,6 +94,10 @@ int main(int argc, char *argv[]){
 		char *arg = argv[i];
 		if(strcmp(arg, "-view") == 0){
 			show_viewer = 1;
+		}
+		else if(strcmp(arg, "-view+edges") == 0){
+			show_viewer = 1;
+			show_flags |= VIEWER_SHOW_EDGES;
 		}
 	}
 
@@ -104,17 +118,15 @@ int main(int argc, char *argv[]){
 
 
 
-
-	#ifdef BUILD_VIEWER
-	if(show_viewer)
-		tspv_init(&viewer, &prob);
-	#endif
-
-
-
 	// Generate graph
 	tsp_generate_complete(&graph, &prob);
 	//tsp_generate_delaunay(&graph, &prob);
+
+
+	#ifdef BUILD_VIEWER
+	if(show_viewer)
+		tspv_init(&viewer, &prob, &graph, show_flags);
+	#endif
 
 
 	// Initialize a path with a max value

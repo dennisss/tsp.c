@@ -70,7 +70,7 @@ void tsp_generate_delaunay(tsp_graph *g, tsp_problem *p);
 
 // Searchers
 void tsp_search_rwalk(tsp_graph *graph, tsp_path *path);
-
+void tsp_search_dfs(tsp_graph *graph, tsp_path *path);
 
 
 

@@ -151,7 +151,6 @@ void tsp_merge(tsp_problem *prob){
 			last = cur;
 
 	}
-
 }
 
 

@@ -85,9 +85,10 @@ void tsp_aco_iterate(tsp_aco_state *state, tsp_path *best){
 
 
 		// Try to generate solutions
-		while(tsp_aco_step(state, a))
-			;
-
+		for(int j = 0; j < n; ++j){
+			if(!tsp_aco_step(state, a))
+				break;
+		}
 	}
 
 

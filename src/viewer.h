@@ -3,6 +3,8 @@
 
 #include "tsp.h"
 
+#define VIEWER_SHOW_EDGES 1
+
 #include <pthread.h>
 
 typedef struct {
@@ -14,15 +16,19 @@ typedef struct {
 
 
 	int dirty; // Whether or not the data has been updated
+	int flags;
 
-	float *cityVertices; int nCityVerts; int citySize;
-	float *pathVertices; int nPathVerts; int pathSize;
+	void *cityVertices; int nCityVerts; int citySize;
+
+	void *pathIndices; int nPathInds; int pathSize;
+	void *edgeIndices; int nEdgeInds; int edgeSize;
+
 } tsp_viewer;
 
 
 // Opens an empty window for displaying graphs and paths
 // Updates are performs in a separate UI thread
-void tspv_init(tsp_viewer *viewer, tsp_problem *prob);
+void tspv_init(tsp_viewer *viewer, tsp_problem *prob, tsp_graph *graph, int flags);
 
 // Cleanup the viewer
 void tspv_destroy(tsp_viewer *viewer);

@@ -9,6 +9,8 @@
 #include "tsp.h"
 #include "shader.h"
 
+#include "array.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <float.h>
@@ -24,7 +26,7 @@
 
 void *_tspv_uithread(void *arg);
 
-void tspv_init(tsp_viewer *viewer, tsp_problem *prob){
+void tspv_init(tsp_viewer *viewer, tsp_problem *prob, tsp_graph *graph, int flags){
 	if(prob->size == 0){
 		printf("Problem must have at least one node to visualize\n");
 		return;
@@ -33,30 +35,66 @@ void tspv_init(tsp_viewer *viewer, tsp_problem *prob){
 	viewer->prob = prob;
 	viewer->lock = PTHREAD_MUTEX_INITIALIZER;
 	viewer->dirty = 0;
-
+	viewer->flags = flags;
 
 	// Allocate buffers
 
 
 	// Load all the city nodes
 	viewer->nCityVerts = prob->size;
-	viewer->citySize = 2 * sizeof(float) * viewer->nCityVerts;
-	viewer->cityVertices = (float *) malloc(viewer->citySize); // TODO: This memory needs to be free'd
+	viewer->citySize = 2 * sizeof(GLfloat) * viewer->nCityVerts;
+
+	GLfloat *cityVertices = (GLfloat *) malloc(viewer->citySize);
+	viewer->cityVertices = cityVertices;
 	for(int i = 0; i < viewer->nCityVerts; i++){
-		viewer->cityVertices[2*i] = prob->nodes[i].x;
-		viewer->cityVertices[2*i+1] = prob->nodes[i].y;
+		cityVertices[2*i] = prob->nodes[i].x;
+		cityVertices[2*i+1] = prob->nodes[i].y;
 	}
 
 
 
+	if(viewer->flags & VIEWER_SHOW_EDGES){
+
+		// Load the edges
+		int nEdges = 0;
+		for(int i = 0; i < graph->size; i++){
+			for(int j = i+1; j < graph->size; j++){
+				if(*tspg_edge(graph, i, j) != NO_EDGE)
+					nEdges++;
+			}
+		}
+
+		viewer->nEdgeInds = 2 * nEdges;
+		viewer->edgeSize = viewer->nEdgeInds * sizeof(GLuint);
+
+		GLuint *edgeIndices = (GLuint *) malloc(viewer->edgeSize);
+		viewer->edgeIndices = edgeIndices;
+
+		nEdges = 0;
+		for(int i = 0; i < graph->size; i++){
+			for(int j = i+1; j < graph->size; j++){
+				if(*tspg_edge(graph, i, j) != NO_EDGE){
+					GLuint *e = &edgeIndices[2*nEdges];
+
+					e[0] = i;
+					e[1] = j;
+
+					nEdges++;
+				}
+			}
+		}
+
+	}
+
 
 	// Initialize zeroed path
-	viewer->nPathVerts = prob->size + 1;
-	viewer->pathSize = 2 * sizeof(float) * viewer->nPathVerts;
-	viewer->pathVertices = (float *) malloc(viewer->pathSize);
-	for(int i = 0; i < viewer->nPathVerts; i++){
-		viewer->pathVertices[2*i] = 0;
-		viewer->pathVertices[2*i+1] = 0;
+	viewer->nPathInds = prob->size + 1;
+	viewer->pathSize = sizeof(GLuint) * viewer->nPathInds;
+
+	GLuint *pathIndices = (GLuint *) malloc(viewer->pathSize);
+	viewer->pathIndices = pathIndices;
+	for(int i = 0; i < viewer->nPathInds; i++){
+		pathIndices[i] = 0;
 	}
 
 
@@ -68,8 +106,10 @@ void tspv_init(tsp_viewer *viewer, tsp_problem *prob){
 void tspv_destroy(tsp_viewer *viewer){
 
 	free(viewer->cityVertices);
-	free(viewer->pathVertices);
+	free(viewer->pathIndices);
 
+	if(viewer->flags & VIEWER_SHOW_EDGES)
+		free(viewer->edgeIndices);
 
 	// Destroy the vertex buffers and the shader programs
 
@@ -79,13 +119,11 @@ void tspv_destroy(tsp_viewer *viewer){
 void tspv_update(tsp_viewer *viewer, tsp_path *path){
 	pthread_mutex_lock(&viewer->lock);
 
+	GLuint *pathIndices = (GLuint *) viewer->pathIndices;
+
 	for(int i = 0; i < path->length; i++){
-		int a = path->indices[i];
-
-		viewer->pathVertices[2*i] = viewer->prob->nodes[a].x;
-		viewer->pathVertices[2*i+1] = viewer->prob->nodes[a].y;
+		pathIndices[i] = path->indices[i];
 	}
-
 
 	viewer->dirty = 1;
 	pthread_mutex_unlock(&viewer->lock);
@@ -221,19 +259,27 @@ void *_tspv_uithread(void *arg){
 	glBindBuffer(GL_ARRAY_BUFFER, vboCities);
 	glBufferData(GL_ARRAY_BUFFER, viewer->citySize, viewer->cityVertices, GL_STATIC_DRAW);
 
+	GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
+	glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(posAttrib);
+
+
+
+
+	// Create edge array
+	GLuint vboEdges;
+	if(viewer->flags & VIEWER_SHOW_EDGES){
+		glGenBuffers(1, &vboEdges);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboEdges);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, viewer->edgeSize, viewer->edgeIndices, GL_STATIC_DRAW);
+	}
 
 
 	// Generate path vertices
 	GLuint vboPath;
 	glGenBuffers(1, &vboPath);
-	glBindBuffer(GL_ARRAY_BUFFER, vboPath);
-	glBufferData(GL_ARRAY_BUFFER, viewer->pathSize, viewer->pathVertices, GL_STATIC_DRAW);
-
-
-
-	GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
-	glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(posAttrib);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboPath);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, viewer->pathSize, viewer->pathIndices, GL_STATIC_DRAW);
 
 
 
@@ -252,8 +298,8 @@ void *_tspv_uithread(void *arg){
 			pthread_mutex_lock(&viewer->lock);
 
 			// Upload new vertices
-			glBindBuffer(GL_ARRAY_BUFFER, vboPath);
-			glBufferData(GL_ARRAY_BUFFER, viewer->pathSize, viewer->pathVertices, GL_STATIC_DRAW);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboPath);
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, viewer->pathSize, viewer->pathIndices, GL_STATIC_DRAW);
 
 			viewer->dirty = 0;
 			pthread_mutex_unlock(&viewer->lock);
@@ -265,15 +311,22 @@ void *_tspv_uithread(void *arg){
 		glClear(GL_COLOR_BUFFER_BIT);
 
 
+		// Draw edges
+		if(viewer->flags & VIEWER_SHOW_EDGES){
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboEdges);
+			glUniform3f(uniColor, 0.8, 0.8, 0.8);
+			glDrawElements(GL_LINES, viewer->nEdgeInds, GL_UNSIGNED_INT, NULL);
+		}
+
 		// Draw path
-		glBindBuffer(GL_ARRAY_BUFFER, vboPath);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboPath);
 		glUniform3f(uniColor, 0.0, 0.0, 0.0);
-		glDrawArrays(GL_LINE_STRIP, 0, viewer->nPathVerts);
+		glDrawElements(GL_LINE_STRIP, viewer->nPathInds, GL_UNSIGNED_INT, NULL);
 
 
 		// Draw cities
 		glUniform3f(uniColor, 1.0, 0.0, 0.0);
-		glBindBuffer(GL_ARRAY_BUFFER, vboCities);
+		//glBindBuffer(GL_ARRAY_BUFFER, vboCities);
 		glDrawArrays(GL_POINTS, 0, viewer->nCityVerts);
 
 
